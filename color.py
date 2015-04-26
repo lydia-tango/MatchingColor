@@ -31,7 +31,7 @@ def getPixels(targetFile, imageFilenameRoot, noiseFile):
 
 
 	allpixel = None
-
+	num_suits = 0
 
 	for x in range(80):
 		# for x in range(1000):
@@ -50,13 +50,13 @@ def getPixels(targetFile, imageFilenameRoot, noiseFile):
 
 		if line[1].lower() == "suit":
 			print "suits"
+			num_suits +=1
 
 			image_rgb = cv2.imread(imageFilenameRoot + line[0]+".jpg")
-			h = 40
-			w = 30
+			h = 80
+			w = 60
 
 			image_rgb = cv2.resize(image_rgb, (w,h), image_rgb, 0, 0, cv2.INTER_LANCZOS4)	
-
 
 			Z = image_rgb.reshape((-1,3))
 			# convert to np.float32
@@ -67,15 +67,25 @@ def getPixels(targetFile, imageFilenameRoot, noiseFile):
 			else:
 				allpixel = numpy.concatenate((allpixel, Z))
 
-
-
 	# define criteria, number of clusters(K) and apply kmeans()
 	criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
 	K = 100
 	ret,label,center=cv2.kmeans(allpixel,K,criteria,10,cv2.KMEANS_RANDOM_CENTERS)	
 
+	reshaped_label = label.reshape(h*num_suits, w)
 
-	print ret
+	split = numpy.vsplit(reshaped_label, num_suits)
+
+
+	for a in split:
+		# Now convert back into uint8, and make original image
+		center = numpy.uint8(center)
+		res = center[a.flatten()]
+		res2 = res.reshape(h, w, 3)
+
+		cv2.imshow('res2',res2)
+		cv2.waitKey(0)
+		cv2.destroyAllWindows()
 
 
 

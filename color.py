@@ -49,7 +49,6 @@ def getPixels(targetFile, imageFilenameRoot, noiseFile):
 			continue
 
 		if line[1].lower() == "suit":
-			print "suits"
 			num_suits +=1
 
 			image_rgb = cv2.imread(imageFilenameRoot + line[0]+".jpg")
@@ -72,6 +71,8 @@ def getPixels(targetFile, imageFilenameRoot, noiseFile):
 	K = 100
 	ret,label,center=cv2.kmeans(allpixel,K,criteria,10,cv2.KMEANS_RANDOM_CENTERS)	
 
+	print "Finished kmeans round 1 with", num_suits, "suits\n"
+
 	reshaped_label = label.reshape(h*num_suits, w)
 
 	split = numpy.vsplit(reshaped_label, num_suits)
@@ -83,9 +84,41 @@ def getPixels(targetFile, imageFilenameRoot, noiseFile):
 		res = center[a.flatten()]
 		res2 = res.reshape(h, w, 3)
 
-		cv2.imshow('res2',res2)
-		cv2.waitKey(0)
-		cv2.destroyAllWindows()
+		# cv2.imshow('res2',res2)
+		# cv2.waitKey(0)
+		# cv2.destroyAllWindows()
+
+		print "res2 shape: ", res2.shape
+		
+		# ------------------------------ start working again from here --------------------------------
+		#create a histogram for every image
+		channels = [0, 1, 2]
+		allChHist = None
+
+		channels = cv2.split(res2)
+
+		# loop over the image channels
+		for channel in channels: # create a histogram each channel
+
+			hist = cv2.calcHist([channel], [0], None, [256], [0, 256]) # (256L, 1L)
+			print "ind. hist size:", hist.shape
+
+			#want to normalize now -> really not sure if this is working
+			cv2.normalize(hist, hist, 1)
+
+			# concatenate the histograms for each color channel
+			if allChHist == None:
+				allChHist = hist
+			else:
+				allChHist = numpy.concatenate((allChHist, hist)) #ends up as (768L, 1L)
+		print "allChHist shape: ", allChHist.shape
+		 
+ 
+
+		
+
+	#run p-means to get "representative" color schemes
+	#p~10
 
 
 

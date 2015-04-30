@@ -1,117 +1,141 @@
 import cv2
 import numpy
+# where we define the category of men clothes
 from defClothes import *
+from matplotlib import pyplot as plt
+
 
 def getPixels(targetFile, imageFilenameRoot, noiseFile):
-
+	# targetFile stores all the category information of the images
 	target = open(targetFile, "r")
-
-
-
-	# outfile = open(outputFile, "w")
-	# infile = open(inputFile, "w")
+	# noiseFile stores all the index of noise data 
 	noise = open(noiseFile, "r")
 
 
 	# diversity = len(article_text)
 	# num_list = [0] * diversity
 	noise_list = []
+	article_index = 4
+	K = 5
 
-	# max_num = 210
 
-	# verbose = False
-
+	# add all indeces of noices into noise_list
 	while 1:
-		# ignore = False
-		# isTop = True 
-
 		line = noise.readline().split()
 		if len(line) == 0: break
 		noise_list.append(line[0])
 
 
-	allpixel = None
+	allpixel = numpy.empty((1,1,1), 'uint8')	# all pixel is a n * 3 matrix of all n pixels in images
 	num_suits = 0
 
-	for x in range(80):
-		# for x in range(1000):
-		# ignore = False
-		# isTop = True 
-
-
+	# loop through images 
+	while 1:
+		
 		line = target.readline().split()
 		if len(line) == 0: break
 		
-		# if line[1].lower() == "jacket":
-		# 	print line[0]
+		# ignore noise images
 		if line[0] in noise_list:
 			# print "noise"
 			continue
 
-		if line[1].lower() == "suit":
+
+		if line[1].lower() in article_list[article_index]:
 			num_suits +=1
 
 			image_rgb = cv2.imread(imageFilenameRoot + line[0]+".jpg")
-			h = 80
-			w = 60
 
+			h = 8
+			w = 6
 			image_rgb = cv2.resize(image_rgb, (w,h), image_rgb, 0, 0, cv2.INTER_LANCZOS4)	
 
-			Z = image_rgb.reshape((-1,3))
+			# construct a wh * 3 matrix of all pixels in the image
+			image_pixels = image_rgb.reshape((-1,3))
 			# convert to np.float32
-			Z = numpy.float32(Z)
-
-			if allpixel == None:
-				allpixel = Z
+			image_pixels = numpy.float32(image_pixels)
+			# append the image_pixels to a large matrix
+			if allpixel.size < 10:
+				allpixel = image_pixels
 			else:
-				allpixel = numpy.concatenate((allpixel, Z))
+				allpixel = numpy.concatenate((allpixel, image_pixels))
 
 	# define criteria, number of clusters(K) and apply kmeans()
 	criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-	K = 100
+	# print allpixel.shape
 	ret,label,center=cv2.kmeans(allpixel,K,criteria,10,cv2.KMEANS_RANDOM_CENTERS)	
+	center_color_display = numpy.empty((30, K * 30, 3), 'uint8')
+	for i, c in enumerate(center):
+		center_color_display[:, i*30: (i+1)*30] = c
+	cv2.imwrite('analysis/' + article_text[article_index] + str(K) + '.jpg', center_color_display)
+	# cv2.imshow('res2', center_color_display)
+	# cv2.waitKey(0)
+	# cv2.destroyAllWindows()
+	print "Finished kmeans round 1 with", num_suits, article_text[article_index]
 
-	print "Finished kmeans round 1 with", num_suits, "suits\n"
+	label_each_image_list = numpy.vsplit(label, num_suits)
+	allHist = numpy.empty((1,1,1), 'float32')
+	for label_each_image in label_each_image_list:
+		# label_matrix = label_each_image[:, :, numpy.newaxis]
+		# label_matrix = label_matrix.astype('uint8') 
 
-	reshaped_label = label.reshape(h*num_suits, w)
-
-	split = numpy.vsplit(reshaped_label, num_suits)
-
-
-	for a in split:
 		# Now convert back into uint8, and make original image
 		center = numpy.uint8(center)
-		res = center[a.flatten()]
+		res = center[label_each_image.flatten()]
 		res2 = res.reshape(h, w, 3)
+		# get a histogram of color distribution of each image
+		hist, bins = numpy.histogram(label_each_image, K, [0, K])
+		hist = hist.astype("f")
+		hist /= h*w # normalize distribution
+		if allHist.size < 4:
+			allHist = hist
+		else:
+			allHist = numpy.vstack((allHist, hist))
+	# print allHist
 
-		# cv2.imshow('res2',res2)
-		# cv2.waitKey(0)
-		# cv2.destroyAllWindows()
+	# criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+	# print allpixel.shape
+	P = 10
+	histRet,histLabel,histCenter=cv2.kmeans(allHist,P,criteria,10,cv2.KMEANS_RANDOM_CENTERS)
 
-		print "res2 shape: ", res2.shape
+	print histCenter
+	# print histRet
+	# print histLabel	
+	# print hist.type
+
+		# plt.plot(hist)
+		# plt.xlim([0,K])
+		# plt.show()
+
 		
 		# ------------------------------ start working again from here --------------------------------
 		#create a histogram for every image
-		channels = [0, 1, 2]
-		allChHist = None
-
-		channels = cv2.split(res2)
+		# channels = [0, 1, 2]
+		# allChHist = None
+		# channels = cv2.split(res2)
 
 		# loop over the image channels
-		for channel in channels: # create a histogram each channel
+		# color = ('b','g','r')
+		# for i,col in enumerate(color):
+		# print res2.shape
+		# print label_matrix
+		# histr = cv2.calcHist(label_matrix,[0],None,[K],[0, 3])
 
-			hist = cv2.calcHist([channel], [0], None, [256], [0, 256]) # (256L, 1L)
-			print "ind. hist size:", hist.shape
+		# for channel in channels: # create a histogram each channel
 
-			#want to normalize now -> really not sure if this is working
-			cv2.normalize(hist, hist, 1)
+		# 	hist = cv2.calcHist([channel], [0], None, [K], [0, K]) # (256L, 1L)
+		# 	hist /= h*w
+		# 	print "ind. hist size:", hist.shape
 
-			# concatenate the histograms for each color channel
-			if allChHist == None:
-				allChHist = hist
-			else:
-				allChHist = numpy.concatenate((allChHist, hist)) #ends up as (768L, 1L)
-		print "allChHist shape: ", allChHist.shape
+		# 	#want to normalize now -> really not sure if this is working
+		# 	cv2.normalize(hist, hist, 1)
+
+		# 	# concatenate the histograms for each color channel
+		# 	if allChHist == None:
+		# 		allChHist = hist
+		# 	else:
+		# 		allChHist = numpy.concatenate((allChHist, hist)) #ends up as (768L, 1L)
+		# print "allChHist shape: ", allChHist.shape
 		 
  
 

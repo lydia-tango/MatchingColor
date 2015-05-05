@@ -1,0 +1,31 @@
+{	
+	"suits":
+	{
+		"color": [[32, 32, 32], [32, 32, 32]], 
+		"hist": {
+			"centers": [[0.1, 0.2, 0.3, 0.4], [0.1, 0.2, 0.3, 0.4]],
+			"maxDistance": 2,
+			"nodes":[{
+				"imgIndex": 3,
+				"distance": 5,
+				"distribution": [0.1, 0.2, 0.3, 0.4]
+			}]
+		}
+	}
+	, 
+	"shorts":
+	, 
+	"bottoms":
+	, 
+	"shirts":
+	, 
+	"tops":
+	, 
+	"jacket":
+	, 
+	"blazers":
+	, 
+	"vests":
+	, 
+	"tshirts":
+}

@@ -13,3 +13,6 @@ tshirts = ["t-shirt", "poloshirt"]
 
 article_text = ["suits", "shorts", "bottoms", "shirts", "tops", "jacket", "blazers", "vests", "tshirts"]
 article_list = [suits, shorts, bottoms, shirts, tops, jacket, blazers, vests, tshirts]
+
+h = 80
+w = 60

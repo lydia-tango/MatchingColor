@@ -4,7 +4,7 @@ import cv2
 allpixel = None
 
 
-for i in range(999, 1020):
+for i in range(1000, 1002):
 	img = cv2.imread("img/lg-" + str(i) +".jpg")
 	cv2.imshow('res2',img)
 	cv2.waitKey(0)

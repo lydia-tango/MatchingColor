@@ -15,7 +15,7 @@ class colorSchemeCategorizer:
 		self.article_list = article_list
 		self.initializeData()
 		self.getNoiseList(noiseFile)
-		self.K = 25
+		self.K = 20
 		self.P = 10
 
 
@@ -63,7 +63,7 @@ class colorSchemeCategorizer:
 			allpixel = numpy.empty((1,1,1), 'uint8')	# all pixel is a n * 3 matrix of all n pixels in images
 
 			# loop through images 
-			for i in range(1000):
+			for i in range(4000):
 			# while 1:	
 				line = target.readline().split()
 				if len(line) == 0: break
@@ -74,7 +74,7 @@ class colorSchemeCategorizer:
 					continue
 
 				if line[1].lower() in article_list[article_index]:
-					if num_clothes >= 50:
+					if num_clothes >= 100:
 						continue
 					
 					try:
@@ -129,7 +129,7 @@ class colorSchemeCategorizer:
 				else:
 					allHist = numpy.vstack((allHist, hist))
 			
-			P = 5
+			P = 10
 			# P = num_clothes/2
 			# while P > 10:
 			# 	P = P/2
@@ -150,6 +150,8 @@ class colorSchemeCategorizer:
 				self.data[category_text]["hist"][center_index]["nodes"].append({"imgIndex": image_index[i][0], "category": image_index[i][1], "distance": dist, "distribution": hist_i})
 				# print dist
 			print self.data
+
+
 
 	def getMaxDistance(self):
 		for k, v in self.data.iteritems():
